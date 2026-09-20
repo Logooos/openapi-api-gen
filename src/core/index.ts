@@ -1,0 +1,10 @@
+export { parseSpec, detectVersion } from "./parser.js";
+export { normalizeSpec } from "./normalizer.js";
+export { diagnose } from "./diagnostics.js";
+export { createGenerationPlan } from "./generation-plan.js";
+export { generate } from "./generate.js";
+export type * from "./generation-model.js";
+export type * from "./model.js";
+export type { EnumPlan, ProjectEnum, EnumMember } from "./enum-generator.js";
+export { defineConfig } from "./config.js";
+export type { GeneratorConfig } from "./config.js";

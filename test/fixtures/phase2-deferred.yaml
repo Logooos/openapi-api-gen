@@ -1,0 +1,88 @@
+openapi: 3.1.0
+info: { title: Phase boundaries, version: "1" }
+paths:
+  /a:
+    get:
+      operationId: a
+      tags: [alpha]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/Wrapper" } },
+              },
+          }
+  /b:
+    get:
+      operationId: b
+      tags: [beta]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/Shared" } },
+              },
+          }
+  /default:
+    get:
+      operationId: fallback
+      tags: [alpha]
+      responses:
+        default: { description: Not a declared success }
+  /multipart:
+    post:
+      operationId: upload
+      tags: [alpha]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              {
+                type: object,
+                properties: { file: { type: string, format: binary } },
+              }
+      responses:
+        "204": { description: OK }
+  /json-binary:
+    post:
+      operationId: jsonBinary
+      tags: [alpha]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                properties: { file: { type: string, format: binary } },
+              }
+      responses:
+        "204": { description: OK }
+  /safe:
+    get:
+      operationId: safe
+      tags: [alpha]
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { type: [string, "null"] } } },
+          }
+components:
+  schemas:
+    Wrapper:
+      {
+        type: object,
+        properties: { value: { $ref: "#/components/schemas/Shared" } },
+      }
+    Shared:
+      {
+        type: object,
+        properties: { next: { $ref: "#/components/schemas/Shared" } },
+      }

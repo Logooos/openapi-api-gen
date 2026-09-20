@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info: { title: Invalid project enums, version: "1" }
+paths:
+  /cases:
+    get:
+      operationId: cases
+      tags: [cases]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cases" }
+components:
+  schemas:
+    Cases:
+      type: object
+      properties:
+        duplicate:
+          type: string
+          x-enum-name: Duplicate
+          enum: ["1:夜间(Night-light)", "2:夜光(Night light)"]
+        noEnglish:
+          type: string
+          x-enum-name: NoEnglish
+          enum: ["1:夜光"]
+        malformed:
+          type: string
+          x-enum-name: Malformed
+          enum: [CLASSIC]
+        malformedAgain:
+          type: string
+          x-enum-name: Malformed
+          enum: [CLASSIC]
+        conflict:
+          type: string
+          x-enum-name: Conflict
+          enum: ["A:甲(Alpha)"]
+        conflictAgain:
+          type: string
+          x-enum-name: Conflict
+          enum: ["B:乙(Beta)"]
+        mixed:
+          type: string
+          x-enum-name: Mixed
+          enum: ["1:夜光(Nightlight)"]
+        mixedAgain:
+          type: integer
+          x-enum-name: Mixed
+        missing:
+          type: string
+          x-enum-name: Missing
+        emptyValue:
+          type: string
+          x-enum-name: EmptyValue
+          enum: [":空(Empty)"]
+        emptyEnglish:
+          type: string
+          x-enum-name: EmptyEnglish
+          enum: ["1:空(---)"]
+        invalidMember:
+          type: string
+          x-enum-name: InvalidMember
+          enum: ["1:空(123 Mode)"]
+        noChinese:
+          type: string
+          x-enum-name: NoChinese
+          enum: ["A:(Alpha)"]
+        malformedParentheses:
+          type: string
+          x-enum-name: BadParentheses
+          enum: ["A:甲(Alpha"]
+        emptyList:
+          type: string
+          x-enum-name: EmptyList
+          enum: []
+        numberEntry:
+          type: number
+          x-enum-name: NumberEntry
+          enum: [1, 2]
+        invalidName:
+          type: string
+          x-enum-name: invalid-name
+          enum: ["A:甲(Alpha)"]

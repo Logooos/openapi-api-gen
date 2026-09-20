@@ -1,0 +1,54 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Default response references", "version": "1" },
+  "paths": {
+    "/a": {
+      "get": {
+        "operationId": "a",
+        "tags": ["a"],
+        "responses": {
+          "default": {
+            "description": "Default",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Value" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/b": {
+      "get": {
+        "operationId": "b",
+        "tags": ["b"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Value" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Value": {
+        "type": "object",
+        "default": { "$ref": "#/not-a-schema-reference" },
+        "properties": {
+          "default": { "$ref": "#/components/schemas/Child" },
+          "properties": { "$ref": "#/components/schemas/Child" }
+        }
+      },
+      "Child": {
+        "type": "string",
+        "x-enum-name": "ValueKind"
+      }
+    }
+  }
+}

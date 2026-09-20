@@ -1,0 +1,16 @@
+openapi: 3.1.0
+info: { title: Existing response name, version: "1" }
+paths:
+  /result:
+    get:
+      operationId: result
+      tags: [result]
+      responses:
+        "200":
+          description: Already named
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResultResponse" }
+components:
+  schemas:
+    ResultResponse: { type: object, properties: { ok: { type: boolean } } }

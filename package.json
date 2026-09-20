@@ -1,0 +1,55 @@
+{
+  "name": "openapi-api-gen",
+  "version": "0.5.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@10.26.1",
+  "exports": {
+    ".": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.js"
+    }
+  },
+  "bin": {
+    "openapi-api-gen": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "diagnose": "tsx src/cli/index.ts diagnose",
+    "generate": "tsx src/cli/index.ts generate",
+    "format": "prettier --write src test scripts package.json tsconfig*.json README.md CHANGELOG.md",
+    "format:check": "prettier --check src test scripts package.json tsconfig*.json README.md CHANGELOG.md",
+    "check": "pnpm typecheck && pnpm test && pnpm format:check && pnpm build"
+  },
+  "dependencies": {
+    "prettier": "^3.9.8",
+    "yaml": "^2.9.1",
+    "tsx": "^4.23.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "axios": "^1.20.0",
+    "typescript": "^7.0.2"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "description": "Deterministic OpenAPI 3.0/3.1 transport API and TypeScript type generator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Logooos/openapi-api-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Logooos/openapi-api-gen/issues"
+  },
+  "homepage": "https://github.com/Logooos/openapi-api-gen#readme",
+  "author": "Logooos",
+  "types": "./dist/core/index.d.ts"
+}

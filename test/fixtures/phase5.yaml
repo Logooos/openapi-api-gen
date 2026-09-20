@@ -1,0 +1,63 @@
+openapi: 3.1.0
+info:
+  title: CLI
+  version: "1"
+paths:
+  /items/a:
+    get:
+      operationId: getItem
+      tags:
+        - Items
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /items/admin/a:
+    get:
+      operationId: getAdmin
+      tags:
+        - Items
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /other:
+    get:
+      operationId: other
+      tags:
+        - Other
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Other"
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type:
+            - string
+            - "null"
+    Other:
+      type: object
+      properties:
+        name:
+          type: string

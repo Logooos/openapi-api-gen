@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info: { title: Metadata regression, version: "1" }
+paths:
+  /records:
+    post:
+      operationId: save_1
+      tags: [records]
+      summary: 保存
+      description: 操作说明
+      deprecated: true
+      parameters:
+        - name: X-Business
+          in: header
+          description: 业务头
+          deprecated: true
+          schema: { type: string, enum: [A, B], default: A }
+      requestBody:
+        description: 请求说明
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecordDTO" }
+      responses:
+        default:
+          description: 默认响应，不推断为成功
+          content:
+            "*/*":
+              schema:
+                {
+                  $ref: "#/components/schemas/RecordDTO",
+                  description: 引用处说明,
+                }
+  /binary:
+    get:
+      operationId: read
+      tags: [other]
+      responses:
+        "200":
+          description: 二进制
+          content:
+            "*/*":
+              schema: { type: string, format: binary }
+components:
+  schemas:
+    RecordDTO:
+      type: object
+      description: 记录
+      required: [id]
+      properties:
+        id: { type: integer, format: int64, readOnly: true, description: ID }
+        time: { type: string, format: "yyyy/MM/dd HH:mm:ss" }
+        mode:
+          type: string
+          x-enum-name: Mode
+          enum: ["1:启用(Enabled)", "2:禁用(Disabled)"]
+          deprecated: true
+        modeCode: { type: integer, x-enum-name: Mode }
+        variant:
+          oneOf:
+            - { $ref: "#/components/schemas/RecordDTO" }
+            - { type: string }
+        children:
+          type: object
+          additionalProperties:
+            type: array
+            items: { $ref: "#/components/schemas/RecordDTO" }
+        attributes:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/RecordDTO" }
+        secret: { type: string, writeOnly: true, default: "", minLength: 1 }

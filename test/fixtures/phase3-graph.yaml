@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info: { title: Schema graph locations, version: "1" }
+paths:
+  /root:
+    get:
+      operationId: root
+      tags: [alpha]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Root" }
+  /leaf:
+    get:
+      operationId: leaf
+      tags: [beta]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Leaf" }
+components:
+  schemas:
+    Root:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Leaf" } }
+        default: { $ref: "#/components/schemas/Leaf" }
+        properties: { $ref: "#/components/schemas/Leaf" }
+      additionalProperties: { $ref: "#/components/schemas/Leaf" }
+      allOf: [{ $ref: "#/components/schemas/Leaf" }]
+      oneOf: [{ $ref: "#/components/schemas/Leaf" }]
+      anyOf: [{ $ref: "#/components/schemas/Leaf" }]
+      not: { $ref: "#/components/schemas/Hidden" }
+      prefixItems: [{ $ref: "#/components/schemas/Hidden" }]
+      dependentSchemas:
+        properties: { $ref: "#/components/schemas/Hidden" }
+      example: { $ref: "#/components/schemas/NotAReference" }
+      default: { $ref: "#/components/schemas/NotAReference" }
+    Leaf: { type: object }
+    Hidden: { type: string }

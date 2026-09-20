@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info: { title: Schema ownership, version: "1" }
+paths:
+  /alpha:
+    get:
+      operationId: alpha
+      tags: [alpha]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Alpha" }
+        "204": { description: Empty }
+  /beta:
+    get:
+      operationId: beta
+      tags: [beta]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Beta" }
+components:
+  schemas:
+    Alpha:
+      type: object
+      properties:
+        shared: { $ref: "#/components/schemas/Shared" }
+        again: { $ref: "#/components/schemas/Shared" }
+        local: { $ref: "#/components/schemas/LocalA" }
+        next: { $ref: "#/components/schemas/Alpha" }
+    Beta:
+      type: object
+      properties:
+        shared: { $ref: "#/components/schemas/Shared" }
+    Shared:
+      type: object
+      properties:
+        leaf: { $ref: "#/components/schemas/Leaf" }
+    Leaf: { type: string }
+    LocalA:
+      type: object
+      properties:
+        b: { $ref: "#/components/schemas/LocalB" }
+    LocalB:
+      type: object
+      properties:
+        a: { $ref: "#/components/schemas/LocalA" }
+    Unused: { type: string }

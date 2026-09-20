@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info: { title: Type alternatives, version: "1" }
+paths:
+  /mixed-transport:
+    get:
+      operationId: mixedTransport
+      tags: [values]
+      responses:
+        "200":
+          description: Incompatible transports
+          content:
+            application/octet-stream: {}
+            application/json:
+              schema: { type: string }
+  /values:
+    get:
+      operationId: values
+      tags: [values]
+      parameters:
+        - name: labels
+          in: query
+          schema: { type: array, items: { type: string } }
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/Value" } },
+              },
+          }
+components:
+  schemas:
+    Value:
+      type: object
+      required: [mixed, nil]
+      properties:
+        mixed: { type: [string, object], properties: { id: { type: integer } } }
+        nil: { type: ["null"] }
+        custom: { type: string, format: clock-time }
+        dict: { type: object, additionalProperties: false }
+        unknown: { not: { type: number } }

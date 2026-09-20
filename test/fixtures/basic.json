@@ -1,0 +1,66 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Focused fixture", "version": "1" },
+  "tags": [{ "name": "unused" }],
+  "paths": {
+    "/pets/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" }
+        }
+      ],
+      "get": {
+        "operationId": "getPet_1",
+        "tags": ["pets", "animals"],
+        "parameters": [{ "$ref": "#/components/parameters/Query" }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PetVO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "operationId": "upload",
+        "tags": ["files"],
+        "requestBody": { "$ref": "#/components/requestBodies/Upload" },
+        "responses": { "204": { "description": "Done" } }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Query": { "name": "q", "in": "query", "schema": { "type": "string" } }
+    },
+    "requestBodies": {
+      "Upload": {
+        "required": true,
+        "content": { "multipart/form-data": { "schema": { "type": "object" } } }
+      }
+    },
+    "schemas": {
+      "PetVO": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "nullable": true },
+          "parent": { "$ref": "#/components/schemas/PetVO" },
+          "status": {
+            "type": "string",
+            "x-enum-name": "Status",
+            "enum": ["1:就绪(Ready)"]
+          }
+        }
+      }
+    }
+  }
+}

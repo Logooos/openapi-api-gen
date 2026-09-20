@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info: { title: Cross-module cycle, version: "1" }
+paths:
+  /a:
+    get:
+      operationId: a
+      tags: [alpha]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/A" }
+  /b:
+    get:
+      operationId: b
+      tags: [beta]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/B" }
+components:
+  schemas:
+    A:
+      type: object
+      properties:
+        b: { $ref: "#/components/schemas/B" }
+    B:
+      type: object
+      properties:
+        a: { $ref: "#/components/schemas/A" }

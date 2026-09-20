@@ -1,0 +1,16 @@
+openapi: 3.1.0
+info:
+  title: YAML fixture
+  version: "1"
+paths:
+  /ping:
+    get:
+      operationId: ping
+      responses:
+        "204":
+          description: Done
+components:
+  schemas:
+    Nullable:
+      type: [string, "null"]
+    Anything: true

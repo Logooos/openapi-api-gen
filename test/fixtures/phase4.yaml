@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info: { title: Project enums, version: "1" }
+paths:
+  /value:
+    get:
+      operationId: value
+      tags: [values]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Value" }
+components:
+  schemas:
+    Value:
+      type: object
+      properties:
+        mode:
+          type: string
+          x-enum-name: DisplayMode
+          enum: ["WIDE:宽布局(Wide Layout)", "COMPACT:紧凑(Compact)"]
+        repeated:
+          type: string
+          x-enum-name: DisplayMode
+          enum: ["WIDE:宽布局(Wide Layout)", "COMPACT:紧凑(Compact)"]
+        missing:
+          type: string
+          x-enum-name: DisplayMode
+        imaging:
+          type: string
+          x-enum-name: ColorMode
+          enum: ["1:深蓝(Dark Blue)", "2:浅色(Light)"]
+        punctuation:
+          type: string
+          x-enum-name: Punctuation
+          enum:
+            [
+              "1:夜间(Night-light)",
+              "2:定位(Read + Write)",
+              "3:布局(wideLayout)",
+              "4:算法(Nested Menu (Custom))",
+            ]
+        standard:
+          type: string
+          enum: [IDLE, READY, FAILED]

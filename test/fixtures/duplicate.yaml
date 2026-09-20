@@ -1,0 +1,15 @@
+openapi: 3.1.0
+info: { title: Duplicate IDs, version: "1" }
+paths:
+  /one:
+    get:
+      operationId: same_1
+      tags: [one]
+      responses:
+        "204": { description: Done }
+  /two:
+    post:
+      operationId: same_1
+      tags: [two]
+      responses:
+        "204": { description: Done }

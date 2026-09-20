@@ -1,0 +1,92 @@
+openapi: 3.0.3
+info:
+  title: Style
+  version: "1"
+paths:
+  /foo:
+    post:
+      tags:
+        - foo
+      operationId: saveFoo
+      summary: 保存
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: header
+          name: X-Tenant
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: zeta
+          schema:
+            type: string
+        - in: query
+          name: alpha
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FooDTO"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+  /complete:
+    post:
+      tags:
+        - foo
+      operationId: complete
+      responses:
+        "204":
+          description: done
+  /other:
+    get:
+      tags:
+        - other
+      operationId: other
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+components:
+  schemas:
+    FooDTO:
+      type: object
+      description: 单行 DTO
+      properties:
+        z:
+          type: string
+          description: 末尾
+        a:
+          type: number
+          description: |-
+            第一行
+            第二行
+        mode:
+          type: string
+          x-enum-name: Mode
+          enum:
+            - READY:就绪(Ready)
+    FooVO:
+      type: object
+      properties:
+        z:
+          type: string
+          description: 末尾
+        a:
+          type: string
+          description: 开头
+    Unused:
+      type: string
