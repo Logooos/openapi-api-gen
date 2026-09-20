@@ -57,9 +57,10 @@ jobs:
         run: |
           expected=$(node -p "require('./package.json').version")
           for attempt in {1..12}; do
-            actual=$(npm view openapi-api-gen version --registry=https://registry.npmjs.org/) || actual=""
+            actual=$(npm view "openapi-api-gen@${expected}" version --registry=https://registry.npmjs.org/) || actual=""
             if [ "$actual" = "$expected" ]; then
               echo "Verified openapi-api-gen@$actual"
+              npm view openapi-api-gen dist-tags --registry=https://registry.npmjs.org/ || echo "Could not observe dist-tags; exact version is verified"
               exit 0
             fi
             echo "Attempt $attempt/12: expected $expected, received $actual"

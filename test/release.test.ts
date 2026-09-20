@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 
@@ -65,6 +66,7 @@ test("release gates keep official-registry OIDC publishing ahead of GitHub Relea
   const verify = index("Verify published version");
   assert.ok(publish >= 0 && publish < verify);
   assert.ok(verify < index("Create GitHub Release"));
+  assert.doesNotMatch(source, /npm view openapi-api-gen version/);
   assert.equal(
     steps[publish].run.trim().split("\n").at(-1),
     "npm publish --access public --provenance --registry=https://registry.npmjs.org/",
@@ -96,4 +98,91 @@ test("release gates keep official-registry OIDC publishing ahead of GitHub Relea
     "pnpm check",
     "npm pack --dry-run --registry=https://registry.npmjs.org/",
   ]);
+});
+
+test("registry retries verify the exact version independently of latest observation", () => {
+  const workflow = parse(readFileSync(".github/workflows/publish.yml", "utf8"));
+  const step = workflow.jobs.publish.steps.find(
+    (step: { name?: string }) => step.name === "Verify published version",
+  );
+  assert.equal(step.env.NPM_CONFIG_FETCH_RETRIES, "0");
+  assert.equal(step.env.NPM_CONFIG_FETCH_TIMEOUT, "15000");
+  const bash =
+    process.platform === "win32"
+      ? resolve(
+          execFileSync("git", ["--exec-path"], { encoding: "utf8" }).trim(),
+          "../../../bin/bash.exe",
+        )
+      : "bash";
+  for (const [scenario, exact, observation, status, attempts] of [
+    [
+      "exact version available while latest is old",
+      "echo 0.5.3",
+      "echo 'latest: 0.5.2'",
+      0,
+      1,
+    ],
+    [
+      "exact version appears on third attempt",
+      'if [ "$attempt" -lt 3 ]; then return 1; else echo 0.5.3; fi',
+      "echo 'latest: 0.5.2'",
+      0,
+      3,
+    ],
+    [
+      "exact version remains unavailable",
+      "return 1",
+      "echo 'latest: 0.5.3'",
+      1,
+      12,
+    ],
+    [
+      "wrong exact version is rejected",
+      "echo 0.5.2",
+      "echo 'latest: 0.5.3'",
+      1,
+      12,
+    ],
+    ["dist-tag observation fails", "echo 0.5.3", "return 1", 0, 1],
+  ] as const) {
+    const result = spawnSync(
+      bash,
+      [
+        "--noprofile",
+        "--norc",
+        "-e",
+        "-c",
+        `
+node() { echo 0.5.3; }
+sleep() { [ "$1" = 10 ] || exit 90; }
+npm() {
+  if [ "$*" = "view openapi-api-gen@0.5.3 version --registry=https://registry.npmjs.org/" ]; then
+    echo exact-query >&2
+    ${exact}
+  elif [ "$*" = "view openapi-api-gen dist-tags --registry=https://registry.npmjs.org/" ]; then
+    echo dist-tags-observation >&2
+    ${observation}
+  else
+    echo unexpected-query >&2
+    return 91
+  fi
+}
+${step.run}`,
+      ],
+      { encoding: "utf8", timeout: 15000 },
+    );
+    assert.ifError(result.error);
+    assert.equal(result.status, status, `${scenario}: ${result.stderr}`);
+    assert.doesNotMatch(result.stderr, /unexpected-query/);
+    assert.equal(
+      (result.stderr.match(/exact-query/g) ?? []).length,
+      attempts,
+      scenario,
+    );
+    assert.equal(
+      (result.stderr.match(/dist-tags-observation/g) ?? []).length,
+      status === 0 ? 1 : 0,
+      scenario,
+    );
+  }
 });
