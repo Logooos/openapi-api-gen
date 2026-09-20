@@ -1,6 +1,11 @@
 # Changelog
 
-Versions below are repository milestones, not npm publishes, Git tags, or GitHub Releases.
+Versions 0.5.1 and later are public npm releases. Earlier versions record repository milestones; milestone completion alone does not imply publication.
+
+## 0.5.2
+
+- Update README for the public npm release and generated-layer integration guidance.
+- Emit arrays as T[] instead of Array<T>, preserving parentheses for union, intersection and nullable element types.
 
 ## 0.5.1 — Generated code style / DX patch
 

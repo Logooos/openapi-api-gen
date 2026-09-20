@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info: { title: Array syntax, version: "1" }
+paths:
+  /arrays:
+    post:
+      operationId: arrays
+      tags: [arrays]
+      parameters:
+        - name: labels
+          in: query
+          schema: { type: array, items: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { type: array, items: { $ref: "#/components/schemas/Value" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                { type: array, items: { $ref: "#/components/schemas/Value" } }
+components:
+  schemas:
+    Value:
+      type: object
+      properties:
+        nested: { type: array, items: { type: array, items: { type: number } } }
+        nullableArray: { type: array, nullable: true, items: { type: string } }
+        nullableItems: { type: array, items: { type: string, nullable: true } }
+        union:
+          type: array
+          items: { oneOf: [{ type: string }, { type: number }] }
+        intersection:
+          type: array
+          items:
+            allOf:
+              - {
+                  type: object,
+                  required: [a],
+                  properties: { a: { type: string } },
+                }
+              - {
+                  type: object,
+                  required: [b],
+                  properties: { b: { type: number } },
+                }

@@ -35,6 +35,7 @@ The frozen product and technical requirements live in `PRD.md`. Read the relevan
 - Milestone mapping: Phase 1/1.5 = `0.1.0`; Phase 2 = `0.2.0`; Phase 3 = `0.3.0`; Phase 4 = `0.4.0`; Phase 5 = `0.5.0`; full v1 acceptance passed = `1.0.0`.
 - At each Phase completion, update the package version and CHANGELOG.md, and record the milestone version in the phase report. Do not advance the milestone before its Phase is completed.
 - Before a release, run the full generator regression workflow.
+- Publish npm releases with the official registry explicitly specified: `npm publish --access public --registry=https://registry.npmjs.org/`. Never rely on the configured default registry, which may be a mirror. Use the same explicit registry for npm authentication and release verification.
 - Dependency or runtime upgrades must pass the real OpenAPI integration suite.
 - Do not modify the stable real-world fixture merely to make a regression pass.
 

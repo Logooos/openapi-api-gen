@@ -204,7 +204,7 @@ test("configuration drives module split, names, owners, primitives, request impo
   assert.equal(filtered.plan.excludedOperations.length, 2);
   assert.match(
     filtered.files.find((f) => f.path === "moved/index.ts")!.content,
-    /Array<Item>/,
+    /Item\[\]/,
   );
   assert.ok(
     !(await generate(await load())).files.some((f) => f.path === "index.ts"),

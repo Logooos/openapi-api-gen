@@ -1,6 +1,6 @@
 # openapi-api-gen
 
-OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator，提供 Core API 和 CLI。当前 npm 发布版本为 **0.5.1**，要求 **Node.js ≥22.12**。
+OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator，提供 Core API 和 CLI。当前 npm 发布版本为 **0.5.2**，要求 **Node.js ≥22.12**。
 
 [npm package](https://www.npmjs.com/package/openapi-api-gen) · [GitHub](https://github.com/Logooos/openapi-api-gen) · [MIT License](LICENSE)
 

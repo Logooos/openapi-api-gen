@@ -228,6 +228,42 @@ export const badType: Value = { mixed: false, nil: null };
   assert.equal(uri, "/values?labels=one&labels=two");
 });
 
+test("array syntax preserves element precedence and API types", async (t) => {
+  const doc = await load("test/fixtures/array-style.yaml");
+  const result = await generate(doc);
+  assert.deepEqual(result, await generate(doc));
+  assert.deepEqual(result.plan.diagnostics, []);
+  const all = result.files.map((file) => file.content).join("\n");
+  assert.doesNotMatch(all, /\bArray</);
+  for (const expected of [
+    "labels?: string[]",
+    "data: Value[]",
+    "axios.post<Value[]>",
+    "nested?: number[][]",
+    "nullableArray?: string[] | null",
+    "nullableItems?: (string | null)[]",
+    "union?: (string | number)[]",
+  ])
+    assert.ok(all.includes(expected), expected);
+  const compiled = await compile(
+    result,
+    `
+import type { Value } from './arrays/type';
+export const valid: Value = {
+  nested: [[1]], nullableArray: null, nullableItems: ['x', null],
+  union: ['x', 1], intersection: [{ a: 'x', b: 1 }],
+};
+// @ts-expect-error union must remain an array
+export const badUnion: Value = { union: 'x' };
+// @ts-expect-error each intersection element needs both fields
+export const badIntersection: Value = { intersection: [{ b: 1 }] };
+// @ts-expect-error nullable elements do not make the array nullable
+export const badNullableItems: Value = { nullableItems: null };
+`,
+  );
+  t.after(compiled.cleanup);
+});
+
 test("default response references participate in audit and ownership", async () => {
   const input = "test/fixtures/audit-default-response.json";
   const result = await generate(await load(input));

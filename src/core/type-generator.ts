@@ -100,7 +100,7 @@ export const renderType = (
       if (type === "string") return "string";
       if (type === "boolean") return "boolean";
       if (type === "array")
-        return `Array<${renderType(schema.items, context, `${location}.items`)}>`;
+        return `(${renderType(schema.items, context, `${location}.items`)})[]`;
       if (type === "object") return undefined;
       return warn(`Unsupported type ${type}; using unknown.`);
     })
