@@ -5,6 +5,7 @@ Versions 0.5.1 and later are public npm releases. Earlier versions record reposi
 ## Unreleased
 
 - Add explicit patch/minor/major release-it commands and a tag-triggered GitHub Actions workflow for validation, npm Trusted Publishing and GitHub Releases.
+- Gate releases on local pack validation, strict tag/version matching, npm >=11.5.1, explicit provenance and bounded post-publish registry verification.
 
 ## 0.5.2
 

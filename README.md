@@ -214,8 +214,8 @@ x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，�
 ## 维护者发布
 
 1. 更新 `CHANGELOG.md` 并提交，在干净的 `main` 分支上执行发布。
-2. 明确选择一个命令：`pnpm release:patch`、`pnpm release:minor` 或 `pnpm release:major`。release-it 运行检查、更新版本并刷新锁文件，创建 `chore: release vX.Y.Z` commit 和 `vX.Y.Z` tag，然后一并 push。
-3. GitHub Actions 自动校验 tag、运行回归、通过 npm Trusted Publishing 发布到官方 registry，并创建 GitHub Release。本地不执行 npm publish。
+2. 明确选择一个命令：`pnpm release:patch`、`pnpm release:minor` 或 `pnpm release:major`。release-it 依次运行 `pnpm check` 和 `npm pack --dry-run`，更新版本并刷新锁文件，创建 `chore: release vX.Y.Z` commit 和 `vX.Y.Z` tag，然后一并 push。
+3. GitHub Actions 在安装项目依赖前校验 tag，随后冻结安装、运行回归、通过 npm Trusted Publishing 发布到官方 registry（显式启用 provenance）。发布后有限重试查询版本，只有与 `package.json` 一致才创建 GitHub Release。本地不执行 npm publish。
 
 ## 生成代码风格（0.5.1）
 

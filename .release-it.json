@@ -15,7 +15,10 @@
     "release": false
   },
   "hooks": {
-    "before:init": "pnpm check",
+    "before:init": [
+      "pnpm check",
+      "npm pack --dry-run --registry=https://registry.npmjs.org/"
+    ],
     "after:bump": "pnpm install --lockfile-only --ignore-scripts --offline --no-frozen-lockfile"
   }
 }
