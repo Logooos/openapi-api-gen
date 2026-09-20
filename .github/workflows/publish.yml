@@ -21,7 +21,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          registry-url: https://registry.npmjs.org/
           package-manager-cache: false
       - uses: pnpm/action-setup@v4
         with:
@@ -45,7 +44,11 @@ jobs:
       - run: pnpm check
       - run: npm pack --dry-run --registry=https://registry.npmjs.org/
       - name: Publish to npm with OIDC
-        run: npm publish --access public --provenance --registry=https://registry.npmjs.org/
+        run: |
+          unset NODE_AUTH_TOKEN
+          npm config delete //registry.npmjs.org/:_authToken
+          npm config set registry https://registry.npmjs.org/
+          npm publish --access public --provenance --registry=https://registry.npmjs.org/
       - name: Verify published version
         env:
           NPM_CONFIG_FETCH_RETRIES: "0"

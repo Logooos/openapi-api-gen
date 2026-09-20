@@ -66,10 +66,29 @@ test("release gates keep official-registry OIDC publishing ahead of GitHub Relea
   assert.ok(publish >= 0 && publish < verify);
   assert.ok(verify < index("Create GitHub Release"));
   assert.equal(
-    steps[publish].run,
+    steps[publish].run.trim().split("\n").at(-1),
     "npm publish --access public --provenance --registry=https://registry.npmjs.org/",
   );
-  assert.doesNotMatch(source, /NPM_TOKEN|NODE_AUTH_TOKEN/);
+  assert.doesNotMatch(source, /NPM_TOKEN/);
+  assert.doesNotMatch(
+    source.replace(/^\s*unset NODE_AUTH_TOKEN\s*$/gm, ""),
+    /NODE_AUTH_TOKEN/,
+  );
+  assert.match(steps[publish].run, /^unset NODE_AUTH_TOKEN\n/);
+  assert.ok(
+    steps[publish].run.includes(
+      "npm config delete //registry.npmjs.org/:_authToken\n",
+    ),
+  );
+  const setup = steps.find((step: { uses?: string }) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  assert.ok(setup);
+  assert.equal(Object.hasOwn(setup.with, "registry-url"), false);
+  assert.equal(setup.with["node-version"], "24");
+  assert.equal(setup.with["package-manager-cache"], false);
+  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+  assert.equal(pkg.bin["openapi-api-gen"], "dist/cli/index.js");
   const config = JSON.parse(readFileSync(".release-it.json", "utf8"));
   assert.equal(config.npm.publish, false);
   assert.equal(config.npm.skipChecks, true);

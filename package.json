@@ -14,7 +14,7 @@
     }
   },
   "bin": {
-    "openapi-api-gen": "./dist/cli/index.js"
+    "openapi-api-gen": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
