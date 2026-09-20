@@ -1,33 +1,89 @@
 # openapi-api-gen
 
-OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator。Node.js ≥22.12，单包 Core + CLI。当前完成 Phase 5；milestone `0.5.0` + style patch `0.5.1`，尚未发布 npm、tag 或 Release。
+OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator，提供 Core API 和 CLI。当前 npm 发布版本为 **0.5.1**，要求 **Node.js ≥22.12**。
 
-## 使用
+[npm package](https://www.npmjs.com/package/openapi-api-gen) · [GitHub](https://github.com/Logooos/openapi-api-gen) · [MIT License](LICENSE)
 
-先在本仓库安装、构建，再将本地包安装到前端项目。项目中需要 Axios，或一个保持 AxiosInstance 返回语义的默认导出 request。
+## Quick Start
+
+### 1. 安装
+
+在使用生成代码的项目中安装：
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm build
-# 在前端项目中安装本地仓库（替换路径）
-pnpm add -D /path/to/openapi-api-gen
+pnpm add -D openapi-api-gen
+```
+
+或使用 npm：
+
+```sh
+npm install -D openapi-api-gen
+```
+
+生成代码默认使用 Axios；项目尚未安装时，添加运行时依赖：
+
+```sh
 pnpm add axios
-pnpm exec openapi-api-gen ./openapi.yaml --dry-run
-pnpm exec openapi-api-gen ./openapi.yaml
+# npm 用户：npm install axios
 ```
 
-默认写入当前目录下 `src/api`。无需配置时直接默认导入 `axios`。在本仓库调试请指定临时输出，例如 `pnpm generate test/fixtures/phase5.yaml --output .phase2-test-example/api`。
+也可以在配置中指定项目已有的、默认导出的 AxiosInstance request。
+
+### 2. 创建配置
+
+在项目根目录创建 `openapi-gen.config.ts`，将 OpenAPI 3.0/3.1 JSON 或 YAML 文件保存为 `openapi.yaml`（也可将 input 替换为自己的文件路径或 HTTP(S) URL）：
+
+```ts
+import { defineConfig } from "openapi-api-gen";
+
+export default defineConfig({
+  input: "./openapi.yaml",
+  output: "src/apis/generated",
+});
+```
+
+推荐将 `src/apis/generated` 用作 generated transport layer。`output` 完全可配置，不是硬编码目录；省略时默认输出到 `src/api`。
+
+### 3. 添加 script
+
+在项目 `package.json` 的 `scripts` 中添加：
+
+```json
+{
+  "scripts": {
+    "api:generate": "openapi-api-gen --config openapi-gen.config.ts"
+  }
+}
+```
+
+### 4. 生成
 
 ```sh
-openapi-api-gen https://example.com/v3/api-docs --header "Authorization=Bearer TOKEN" --output generated/api
-openapi-api-gen --config openapi-gen.config.ts
-openapi-api-gen --module catalog --dry-run
-openapi-api-gen diagnose ./openapi.json
-openapi-api-gen generate ./openapi.yaml --plan
-openapi-api-gen --help
+pnpm api:generate
 ```
 
-JSON/YAML 按内容解析；HTTP(S) 使用 Node 原生 fetch、30 秒超时并支持重定向。`diagnose` 输出规范统计；`--plan` 保留原来的内存 `{ plan, files, enums }` JSON 输出，不写文件。普通生成输出 JSON 统计、diagnostics 和文件变更计划。
+npm 用户可运行 `npm run api:generate`。若要先预览文件变更而不写入：
+
+```sh
+pnpm api:generate --dry-run
+```
+
+普通 generated API 可直接导入调用，返回 Axios promise，不自动解包 `.data`。手写 adapter 仅用于业务特殊场景，不是强制层。
+
+建议将 generated 文件及管理清单 `.openapi-api-gen.json` 一起提交 Git。不要手工修改生成文件；更新 OpenAPI 或配置后，重新 generate，review diff，再提交变更。
+
+## CLI
+
+```sh
+pnpm exec openapi-api-gen https://example.com/v3/api-docs --header "Authorization=Bearer TOKEN" --output generated/api
+pnpm exec openapi-api-gen --config openapi-gen.config.ts
+pnpm exec openapi-api-gen --module catalog --dry-run
+pnpm exec openapi-api-gen diagnose ./openapi.json
+pnpm exec openapi-api-gen generate ./openapi.yaml --plan
+pnpm exec openapi-api-gen --help
+```
+
+JSON/YAML 按内容解析；HTTP(S) 使用 Node 原生 fetch、30 秒超时并支持重定向。`diagnose` 输出规范统计；`--plan` 输出内存中的 `{ plan, files, enums }` JSON，不写文件。普通生成输出 JSON 统计、diagnostics 和文件变更计划。
 
 ## 既有项目的独立生成层
 
@@ -35,13 +91,12 @@ JSON/YAML 按内容解析；HTTP(S) 使用 Node 原生 fetch、30 秒超时并�
 
 ```text
 src/apis/
-├─ generated/       # generator-owned，内部仍使用单层 module
-├─ custom-workflows/     # handwritten business adapters
-├─ legacy-client/     # handwritten business adapters
-└─ type.ts          # unmanaged
+├─ generated/       # 工具管理的 transport API/type，内部使用单层 module
+├─ custom-workflows/ # 可选的手写业务 adapter
+└─ type.ts          # 手写类型，不由工具管理
 ```
 
-普通调用可直接使用 generated API；特殊业务也可通过手写 adapter 调用 generated API，或独立保留请求。adapter 不是强制层。该目录名仅为示例，output 完全可配置，默认仍为 src/api。nested module path 与 arbitrary multi-tag merge 均 defer 到 v1 之后，不要求复刻 legacy 目录树。
+普通调用可直接使用 generated API；特殊业务也可通过手写 adapter 调用 generated API，或独立保留请求。adapter 不是强制层。该目录名仅为示例，`output` 完全可配置，默认仍为 `src/api`。当前不支持嵌套模块路径或任意多 tag 合并；生成模块用于组织 transport 文件。
 
 ## 配置
 
@@ -52,7 +107,7 @@ import { defineConfig } from "openapi-api-gen";
 
 export default defineConfig({
   input: "./openapi.yaml",
-  output: "src/api",
+  output: "src/apis/generated",
   source: {
     headers: { Authorization: process.env.OPENAPI_TOKEN ?? "" },
   },
@@ -148,13 +203,13 @@ Core 默认固定 Prettier 格式。可选第三参数 `(path, source) => Promis
 
 正常和 recoverable warning/operation 暂缓退出 0；fatal 输入/config/归属/输出/加载错误退出 1。调用方必须检查 stats 和 diagnostics，0 不表示每个 operation 都生成。diagnose 提供版本、operation/schema/tag/module 数、重复/缺失 operationId、multipart 和 x-enum-name 数。
 
-仍不支持 multipart 自动 FormData、default-only 响应推断、JSON binary body 猜测、React Query hooks、enum-list 网络请求。cookie、复杂参数序列化、非 JSON body 等仍沿用明确诊断/暂缓规则。外部引用与未知 schema/format 的回退沿用既有 Core 策略；不是完整 JSON Schema 验证器。
+当前不支持 multipart 自动 FormData、default-only 响应推断、JSON binary body 猜测、React Query hooks、enum-list 网络请求。cookie、复杂参数序列化、非 JSON body 等不支持的情况会给出明确诊断，必要时跳过 operation。外部引用与未知 schema/format 按 Core 策略回退并报告诊断；本工具不是完整 JSON Schema 验证器。
 
 x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，不翻译、不猜测。普通 enum 仍为 literal union。未知 schema 使用 documented unknown fallback + warning；未知 format 保留基础类型。
 
-## 验证与里程碑
+## 开发与验证
 
-`pnpm check` 运行 typecheck、test、format:check、build。公开回归使用 synthetic fixtures，覆盖 CLI/Core 一致性、严格编译、共享 schema/SCC、枚举、dry-run、零变化重复写入与独立生成层保护。当前版本 0.5.1；尚未发布 npm。
+在 GitHub 仓库中运行 `pnpm install --frozen-lockfile` 安装开发依赖，`pnpm check` 运行 typecheck、test、format:check、build。回归测试使用合成 fixtures，覆盖 CLI/Core 一致性、严格编译、共享 schema/SCC、枚举、dry-run、零变化重复写入与独立生成层保护。
 
 ## 生成代码风格（0.5.1）
 
