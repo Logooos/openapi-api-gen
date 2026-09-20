@@ -51,5 +51,6 @@
   },
   "homepage": "https://github.com/Logooos/openapi-api-gen#readme",
   "author": "Logooos",
-  "types": "./dist/core/index.d.ts"
+  "types": "./dist/core/index.d.ts",
+  "license": "MIT"
 }

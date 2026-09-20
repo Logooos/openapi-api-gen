@@ -163,3 +163,7 @@ x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，�
 APIS 使用合法 IdentifierName 的 dot access，其他 key 回退 bracket access。类型引用仅使用已用到、去重排序的 named import type；有名字冲突时稳定分配别名。生成的相对 import 默认不带 .js，面向 Vite/Bundler；这不改变 generator 包本身的 Node ESM import。runtime enum 保持运行时值。
 
 单行描述为 `/** 描述 */`，真实多行描述或多个文档段落保留多行 JSDoc，属性之间不自动添加空行。相关行为由公开自动化回归测试验证。
+
+## License
+
+本项目采用 [MIT License](LICENSE)，Copyright (c) 2026 Logooos。
