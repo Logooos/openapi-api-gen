@@ -22,18 +22,22 @@
     "test": "tsx --test test/*.test.ts",
     "diagnose": "tsx src/cli/index.ts diagnose",
     "generate": "tsx src/cli/index.ts generate",
-    "format": "prettier --write src test scripts package.json tsconfig*.json README.md CHANGELOG.md",
-    "format:check": "prettier --check src test scripts package.json tsconfig*.json README.md CHANGELOG.md",
-    "check": "pnpm typecheck && pnpm test && pnpm format:check && pnpm build"
+    "format": "prettier --write src test scripts package.json tsconfig*.json README.md CHANGELOG.md .release-it.json .github/workflows/publish.yml",
+    "format:check": "prettier --check src test scripts package.json tsconfig*.json README.md CHANGELOG.md .release-it.json .github/workflows/publish.yml",
+    "check": "pnpm typecheck && pnpm test && pnpm format:check && pnpm build",
+    "release:patch": "release-it patch --ci",
+    "release:minor": "release-it minor --ci",
+    "release:major": "release-it major --ci"
   },
   "dependencies": {
     "prettier": "^3.9.8",
-    "yaml": "^2.9.1",
-    "tsx": "^4.23.13"
+    "tsx": "^4.23.13",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.3",
     "axios": "^1.20.0",
+    "release-it": "19.2.4",
     "typescript": "^7.0.2"
   },
   "files": [

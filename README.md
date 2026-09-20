@@ -1,6 +1,6 @@
 # openapi-api-gen
 
-OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator，提供 Core API 和 CLI。当前 npm 发布版本为 **0.5.2**，要求 **Node.js ≥22.12**。
+OpenAPI 3.0.x / 3.1.x → TypeScript API/type generator，提供 Core API 和 CLI。已发布到 npm，要求 **Node.js ≥22.12**。
 
 [npm package](https://www.npmjs.com/package/openapi-api-gen) · [GitHub](https://github.com/Logooos/openapi-api-gen) · [MIT License](LICENSE)
 
@@ -210,6 +210,12 @@ x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，�
 ## 开发与验证
 
 在 GitHub 仓库中运行 `pnpm install --frozen-lockfile` 安装开发依赖，`pnpm check` 运行 typecheck、test、format:check、build。回归测试使用合成 fixtures，覆盖 CLI/Core 一致性、严格编译、共享 schema/SCC、枚举、dry-run、零变化重复写入与独立生成层保护。
+
+## 维护者发布
+
+1. 更新 `CHANGELOG.md` 并提交，在干净的 `main` 分支上执行发布。
+2. 明确选择一个命令：`pnpm release:patch`、`pnpm release:minor` 或 `pnpm release:major`。release-it 运行检查、更新版本并刷新锁文件，创建 `chore: release vX.Y.Z` commit 和 `vX.Y.Z` tag，然后一并 push。
+3. GitHub Actions 自动校验 tag、运行回归、通过 npm Trusted Publishing 发布到官方 registry，并创建 GitHub Release。本地不执行 npm publish。
 
 ## 生成代码风格（0.5.1）
 

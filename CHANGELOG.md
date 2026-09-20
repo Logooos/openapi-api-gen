@@ -2,6 +2,10 @@
 
 Versions 0.5.1 and later are public npm releases. Earlier versions record repository milestones; milestone completion alone does not imply publication.
 
+## Unreleased
+
+- Add explicit patch/minor/major release-it commands and a tag-triggered GitHub Actions workflow for validation, npm Trusted Publishing and GitHub Releases.
+
 ## 0.5.2
 
 - Update README for the public npm release and generated-layer integration guidance.

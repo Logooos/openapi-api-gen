@@ -1,0 +1,21 @@
+{
+  "git": {
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true,
+    "requireUpstream": true,
+    "commitMessage": "chore: release v${version}",
+    "tagName": "v${version}",
+    "pushArgs": ["--follow-tags", "--atomic"]
+  },
+  "npm": {
+    "publish": false,
+    "skipChecks": true
+  },
+  "github": {
+    "release": false
+  },
+  "hooks": {
+    "before:init": "pnpm check",
+    "after:bump": "pnpm install --lockfile-only --ignore-scripts --offline --no-frozen-lockfile"
+  }
+}
