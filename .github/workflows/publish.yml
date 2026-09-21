@@ -44,11 +44,43 @@ jobs:
       - run: pnpm check
       - run: npm pack --dry-run --registry=https://registry.npmjs.org/
       - name: Publish to npm with OIDC
+        env:
+          NPM_CONFIG_FETCH_RETRIES: "0"
+          NPM_CONFIG_FETCH_TIMEOUT: "15000"
+          NPM_CONFIG_PREFER_ONLINE: "true"
         run: |
           unset NODE_AUTH_TOKEN
           npm config delete //registry.npmjs.org/:_authToken
           npm config set registry https://registry.npmjs.org/
+          expected=$(node -p "require('./package.json').version")
+          errors=$(mktemp)
+          trap 'rm -f "$errors"' EXIT
+          if actual=$(npm view "openapi-api-gen@${expected}" version --registry=https://registry.npmjs.org/ 2>"$errors"); then
+            if [ "$actual" = "$expected" ]; then
+              echo "openapi-api-gen@${expected} already exists; skipping npm publish"
+              exit 0
+            fi
+            echo "Unexpected registry version: $actual (expected $expected)" >&2
+            exit 1
+          elif ! grep -Eq '^(npm error|npm ERR!) code E404$' "$errors"; then
+            cat "$errors" >&2
+            echo "Cannot determine whether openapi-api-gen@${expected} exists" >&2
+            exit 1
+          fi
+          echo "openapi-api-gen@${expected} does not exist; publishing"
           npm publish --access public --provenance --registry=https://registry.npmjs.org/
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
       - name: Verify published version
         env:
           NPM_CONFIG_FETCH_RETRIES: "0"
@@ -56,19 +88,24 @@ jobs:
           NPM_CONFIG_PREFER_ONLINE: "true"
         run: |
           expected=$(node -p "require('./package.json').version")
-          for attempt in {1..12}; do
-            actual=$(npm view "openapi-api-gen@${expected}" version --registry=https://registry.npmjs.org/) || actual=""
+          for attempt in {1..15}; do
+            actual=$(npm view "openapi-api-gen@${expected}" version --registry=https://registry.npmjs.org/ 2>/dev/null) || actual=""
             if [ "$actual" = "$expected" ]; then
               echo "Verified openapi-api-gen@$actual"
               npm view openapi-api-gen dist-tags --registry=https://registry.npmjs.org/ || echo "Could not observe dist-tags; exact version is verified"
               exit 0
             fi
-            echo "Attempt $attempt/12: expected $expected, received $actual"
-            if [ "$attempt" -lt 12 ]; then sleep 10; fi
+            echo "Attempt $attempt/15: openapi-api-gen@${expected} is not available yet"
+            if [ "$attempt" -lt 15 ]; then sleep 120; fi
           done
-          echo "Official registry did not report $expected" >&2
+          echo "Official registry did not report openapi-api-gen@${expected} after 15 attempts / approximately 30 minutes." >&2
           exit 1
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          if gh release view "$GITHUB_REF_NAME"; then
+            echo "Release $GITHUB_REF_NAME already exists; skipping creation"
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+          fi

@@ -215,7 +215,11 @@ x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，�
 
 1. 更新 `CHANGELOG.md` 并提交，在干净的 `main` 分支上执行发布。
 2. 明确选择一个命令：`pnpm release:patch`、`pnpm release:minor` 或 `pnpm release:major`。release-it 依次运行 `pnpm check` 和 `npm pack --dry-run`，更新版本并刷新锁文件，创建 `chore: release vX.Y.Z` commit 和 `vX.Y.Z` tag，然后一并 push。
-3. GitHub Actions 在安装项目依赖前校验 tag，随后冻结安装、运行回归、通过 npm Trusted Publishing 发布到官方 registry（显式启用 provenance）。发布后有限重试查询版本，只有与 `package.json` 一致才创建 GitHub Release。本地不执行 npm publish。
+3. GitHub Actions 的 `publish` job 在安装项目依赖前校验 tag，随后冻结安装、运行回归和打包检查，通过 npm Trusted Publishing 发布到官方 registry（显式启用 provenance）。发布前查询 exact version，已存在且与 `package.json` 一致则跳过 publish。本地不执行 npm publish。
+
+独立的 `release` job 依赖 `publish` 成功，检出当前 tag 后查询 `openapi-api-gen@${expected}`。npm 新版本可见性可能延迟，因此每 2 分钟检查一次，最多 15 次，单次请求超时 15 秒；只有返回值严格等于 `package.json.version` 才创建 GitHub Release。dist-tags/latest 仅供日志观察，不阻塞 Release；该 tag 的 Release 已存在时跳过创建。
+
+如果 npm publish 成功但等待可见性超时，在 Actions 中选择 **Re-run failed jobs**，安全重试独立的 `release` job，它不会调用 npm publish。误选 **Re-run all jobs** 时，已可查询的 exact version 会阻止重复 publish，已存在的 GitHub Release 也不会重复创建。若刚发布的版本仍不可见，发布前查询无法证明它已存在，因此应优先仅重试失败的 release job；不要修改或移动已发布 tag 来恢复。
 
 ## 生成代码风格（0.5.1）
 
