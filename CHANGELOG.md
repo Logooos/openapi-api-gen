@@ -4,6 +4,8 @@ Versions 0.5.1 and later are public npm releases. Earlier versions record reposi
 
 ## Unreleased
 
+- Planned for 0.5.4: use declared default responses when no explicit 2xx exists, emit DEFAULT_RESPONSE_FALLBACK without deferring, and retain explicit 2xx precedence and Axios semantics. Response overrides use the same selection; absent contracts remain deferred.
+- Public synthetic integration baseline: 6 operations, generated/deferred changes from 3/3 to 4/2; phase2-deferred also changes from 3/3 to 4/2, and audit-default-response from 1/1 to 2/0. No private fixtures or acceptance counts are used.
 - Verify the exact published npm version with bounded retries; observe dist-tags without blocking GitHub Release on latest propagation.
 - Remove setup-node token authentication configuration for npm Trusted Publishing and normalize the CLI bin path.
 - Add explicit patch/minor/major release-it commands and a tag-triggered GitHub Actions workflow for validation, npm Trusted Publishing and GitHub Releases.

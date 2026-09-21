@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: Default response fallback
+  version: "1"
+paths:
+  /ref:
+    get:
+      operationId: ref
+      tags:
+        - alpha
+      responses:
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Value"
+  /primitive:
+    get:
+      operationId: primitive
+      tags:
+        - alpha
+      responses:
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                type: string
+  /array:
+    get:
+      operationId: array
+      tags:
+        - alpha
+      responses:
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Value"
+  /empty:
+    get:
+      operationId: empty
+      tags:
+        - alpha
+      responses:
+        default:
+          description: Synthetic response
+  /explicit:
+    get:
+      operationId: explicit
+      tags:
+        - alpha
+      responses:
+        "200":
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorVO"
+  /multiple:
+    get:
+      operationId: multiple
+      tags:
+        - alpha
+      responses:
+        "200":
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+        "201":
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                type: string
+        "202":
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorVO"
+  /missing:
+    get:
+      operationId: missing
+      tags:
+        - alpha
+      responses:
+        "400":
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorVO"
+  /shared:
+    get:
+      operationId: shared
+      tags:
+        - beta
+      responses:
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Child"
+  /range:
+    get:
+      operationId: range
+      tags:
+        - alpha
+      responses:
+        2XX:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FooVO"
+        default:
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorVO"
+components:
+  schemas:
+    Value:
+      type: object
+      properties:
+        child:
+          $ref: "#/components/schemas/Child"
+    Child:
+      type: object
+      properties:
+        parent:
+          $ref: "#/components/schemas/Value"
+    FooVO:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+    ErrorVO:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+    Unused:
+      type: string

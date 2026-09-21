@@ -104,6 +104,14 @@ export const createGenerationPlan = (
       reasons.add("UNSUPPORTED_SCHEMA_NAME");
     const responses = successfulResponses(op);
     if (!responses.length) reasons.add("NO_SUCCESS_RESPONSE");
+    else if (responses[0]!.status === "default")
+      diagnostics.push({
+        severity: "warning",
+        code: "DEFAULT_RESPONSE_FALLBACK",
+        location,
+        message:
+          "No explicit 2xx response; using the declared default response contract.",
+      });
     const binaryModes = new Set(
       responses.flatMap((r) =>
         Object.entries(r.content)

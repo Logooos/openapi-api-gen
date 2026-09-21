@@ -162,7 +162,7 @@ CLI 覆盖项：`--output/-o`、`--config/-c`、重复 `--header key=value`、`-
 
 - 仅采用第一个 tag。归属优先级：operation override → 匹配的 path split → moduleNames → 原 tag。glob 支持 `*`（不跨 `/`）、`**`（跨目录）、`?`；exclude 优先；未命中 split 回到原 tag/rename；命中多个 split 报冲突。
 - operation include/exclude 和 override key 使用原始 operationId，exclude 优先。name 同步影响函数和 APIS；保留 `_1`、`_2` 后缀；原始重复 operationId 始终致命。
-- responseType 支持 `blob`、`void`、`string/number/boolean/integer`、本地命名 schema、数组后缀 `[]` 和 `|` 联合；不执行任意 TS 类型表达式。只替换显式 2xx 的响应，不补造 default-only 的成功语义。
+- responseType 支持 `blob`、`void`、`string/number/boolean/integer`、本地命名 schema、数组后缀 `[]` 和 `|` 联合；不执行任意 TS 类型表达式。替换选中的显式 2xx 响应；没有 2xx 时替换 default fallback，不补造不存在的 response contract。
 - schemaOwners 和 overrides.schemas.owner 都覆盖自动推导；两处显式配置不一致会报错。全局图和 SCC 仍保证唯一 schema 定义及稳定 import type。
 - `types.int64` 支持 number/string/bigint；`types.nullable` 支持 union-null/ignore。`types.propertyOrder` 默认为 alphabetical（不依赖 locale），可设 source 保留规范声明顺序；只控制类型属性，不改变 import、APIS、函数或 enum 成员顺序。旧 Core `int64` 简写继续有效，types.int64 优先。
 - root barrel 默认关闭；开启后以排序模块对应的 `Module0`、`Module1` 等 namespace 导出，避免不同模块 APIS 同名冲突。模块集合变化可能改变这些别名，业务代码宜直接导入模块。
@@ -199,11 +199,11 @@ const result = await generate(
 
 Core 默认固定 Prettier 格式。可选第三参数 `(path, source) => Promise<string>` 提供目标项目格式化器；CLI 用同一个 Core 加载项目 Prettier，因此相同输入、配置和格式化上下文逐字节一致。
 
-生成目录为 `<module>/index.ts` + `type.ts`、`_shared/type.ts`、可解析时 `_shared/enum.ts`。API 保持 Axios promise、可选末尾 signal、path 编码替换、专用 query Params、业务 Headers。成功响应只采集明确 2xx；无 body 为 void，多种 body 为去重 union。
+生成目录为 `<module>/index.ts` + `type.ts`、`_shared/type.ts`、可解析时 `_shared/enum.ts`。API 保持 Axios promise、可选末尾 signal、path 编码替换、专用 query Params、业务 Headers。显式 2xx（含受支持的 `2XX`）优先，多种 body 为去重 union，不混入 default/error schema。没有显式 2xx 时使用声明的 default response contract，正常生成 API 和引用类型，并报告非阻断 warning `DEFAULT_RESPONSE_FALLBACK`；无 content/body 时返回 void。两者都没有才因 `NO_SUCCESS_RESPONSE` deferred，其他不支持的请求/类型规则仍适用。generator 不猜测不存在的 response schema，Axios 的响应和错误处理语义不变。
 
 正常和 recoverable warning/operation 暂缓退出 0；fatal 输入/config/归属/输出/加载错误退出 1。调用方必须检查 stats 和 diagnostics，0 不表示每个 operation 都生成。diagnose 提供版本、operation/schema/tag/module 数、重复/缺失 operationId、multipart 和 x-enum-name 数。
 
-当前不支持 multipart 自动 FormData、default-only 响应推断、JSON binary body 猜测、React Query hooks、enum-list 网络请求。cookie、复杂参数序列化、非 JSON body 等不支持的情况会给出明确诊断，必要时跳过 operation。外部引用与未知 schema/format 按 Core 策略回退并报告诊断；本工具不是完整 JSON Schema 验证器。
+当前不支持 multipart 自动 FormData、未声明的响应推断、JSON binary body 猜测、React Query hooks、enum-list 网络请求。cookie、复杂参数序列化、非 JSON body 等不支持的情况会给出明确诊断，必要时跳过 operation。外部引用与未知 schema/format 按 Core 策略回退并报告诊断；本工具不是完整 JSON Schema 验证器。
 
 x-enum-name 字段保持 primitive；runtime enum 仅解析 OpenAPI metadata，不翻译、不猜测。普通 enum 仍为 literal union。未知 schema 使用 documented unknown fallback + warning；未知 format 保留基础类型。
 

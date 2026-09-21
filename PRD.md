@@ -14,7 +14,8 @@ Generated APIs are directly callable. Optional handwritten adapters may wrap the
 - Emit object type aliases, required/optional fields, nullable unions, literal enums, intersections for allOf, unions for oneOf/anyOf and typed additionalProperties. Dates remain strings; int64 defaults to number and is configurable. The JsonNode convention remains an arbitrary-key object.
 - Build a global dependency graph. Each schema has one definition. Infer module usage transitively; shared schemas and cross-module SCCs belong in _shared/type.ts. Explicit owner overrides take precedence but inconsistent ownership is fatal.
 - x-enum-name fields remain primitive. Independently generate runtime enums from reliable VALUE:中文(English) metadata. Valid identifier values supply member names; otherwise English text supplies deterministic UPPER_SNAKE_CASE. Preserve literal values, including numeric-looking strings. Deduplicate consistent definitions; warn and suppress ambiguous/conflicting definitions. Never translate or guess.
-- Explicit 2xx bodies determine responses; absent bodies mean void, distinct bodies form a deduplicated union.
+- Explicit 2xx responses (including supported 2XX ranges) take precedence; distinct bodies form a deduplicated union and default/error schemas are never added to that union. If no explicit 2xx exists, use the declared default response as the fallback contract and emit a non-blocking DEFAULT_RESPONSE_FALLBACK warning. A selected response without a body maps to void. Only absence of both 2xx and default produces NO_SUCCESS_RESPONSE deferral; other unsupported transport/schema rules still apply. Never invent a missing response schema or change Axios promise/rejection semantics.
+- Default response references participate in the global dependency graph, ownership, shared/SCC resolution, imports and usage analysis. Explicit responseType overrides apply to selected 2xx responses or, when absent, the default fallback; they do not create a missing response contract.
 
 ## Configuration and organization
 
@@ -36,7 +37,7 @@ Generated placeholders use void 0. APIS uses dot notation for valid IdentifierNa
 
 ## Diagnostics and acceptance
 
-Multipart FormData generation, default-only response inference, undocumented binary inference, React Query hooks and enum-list network requests are not v1 features. Unsupported operations have explicit recoverable diagnostics. Never guess malformed or incomplete contracts to increase coverage. Fatal input/config/ownership/output errors exit nonzero. Recoverable diagnostics can coexist with successful generation; callers must inspect diagnostics and counts.
+Multipart FormData generation, undocumented response/binary inference, React Query hooks and enum-list network requests are not v1 features. Using a declared default response is contract-based fallback, not schema inference. Unsupported operations have explicit recoverable diagnostics. Never guess malformed or incomplete contracts to increase coverage. Fatal input/config/ownership/output errors exit nonzero. Recoverable diagnostics can coexist with successful generation; callers must inspect diagnostics and counts.
 
 Acceptance requires automated synthetic regressions for parsers, graph/SCC/ownership, API/type/enum generation, configuration, CLI and file lifecycle; strict compilation of generated consumers; Core/CLI parity; deterministic repeat generation; dry-run parity; and unmanaged-file protection. Consumer-specific integrations can provide additional evidence without adding proprietary fixtures to this repository.
 

@@ -483,8 +483,8 @@ test("synthetic integration CLI/Core end-to-end: dry-run parity, zero second wri
   await assert.rejects(access(out));
   const first = JSON.parse(await cli(dir, args));
   assert.deepEqual(first.changes, dry.changes);
-  assert.equal(first.stats.generatedOperations, 3);
-  assert.equal(first.stats.deferredOperations, 3);
+  assert.equal(first.stats.generatedOperations, 4);
+  assert.equal(first.stats.deferredOperations, 2);
   const core = await generate(
     normalizeSpec(parseSpec(input)),
     config,
@@ -496,11 +496,7 @@ test("synthetic integration CLI/Core end-to-end: dry-run parity, zero second wri
     [
       ...new Set(core.plan.deferredOperations.flatMap((op) => op.reasons)),
     ].sort(),
-    [
-      "JSON_BINARY_REQUEST",
-      "UNSUPPORTED_MULTIPART",
-      "NO_SUCCESS_RESPONSE",
-    ].sort(),
+    ["JSON_BINARY_REQUEST", "UNSUPPORTED_MULTIPART"].sort(),
   );
   assert.deepEqual(
     await generate(

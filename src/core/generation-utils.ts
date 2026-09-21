@@ -76,10 +76,14 @@ export const operationSchemas = (op: NormalizedOperation): NormalizedSchema[] =>
     ...Object.values(op.requestBody?.content ?? {}),
     ...op.responses.flatMap((r) => Object.values(r.content)),
   ].filter((schema): schema is NormalizedSchema => schema !== undefined);
-export const successfulResponses = (op: NormalizedOperation) =>
-  op.responses
+export const successfulResponses = (op: NormalizedOperation) => {
+  const responses = op.responses
     .filter((r) => /^2(?:\d\d|XX)$/.test(r.status))
     .sort((a, b) => (a.status < b.status ? -1 : a.status > b.status ? 1 : 0));
+  return responses.length
+    ? responses
+    : op.responses.filter((r) => r.status === "default");
+};
 export const binaryResponse = (
   media: string,
   schema: NormalizedSchema | undefined,

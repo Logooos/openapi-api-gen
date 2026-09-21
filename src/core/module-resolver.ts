@@ -2,6 +2,7 @@ import type { NormalizedDocument, NormalizedSchema } from "./model.js";
 import type { GeneratorConfig } from "./config.js";
 import { normalizeSpec } from "./normalizer.js";
 import { diagnose } from "./diagnostics.js";
+import { successfulResponses } from "./generation-utils.js";
 const matches = (path: string, glob: string): boolean => {
   let pattern = "";
   for (let i = 0; i < glob.length; i++) {
@@ -108,9 +109,10 @@ export const resolveDocument = (
       o?.responseType && o.responseType !== "void"
         ? responseSchema(o.responseType, document)
         : undefined;
+    const selectedResponses = successfulResponses(op);
     const responses = o?.responseType
       ? op.responses.map((r) =>
-          /^2(?:\d\d|XX)$/.test(r.status)
+          selectedResponses.includes(r)
             ? {
                 ...r,
                 content: replacement ? { "application/json": replacement } : {},

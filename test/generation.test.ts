@@ -9,6 +9,7 @@ import axios from "axios";
 import type { AxiosRequestConfig } from "axios";
 import { generate, normalizeSpec, parseSpec } from "../src/core/index.js";
 import type { GenerationResult } from "../src/core/index.js";
+import { writeOutput } from "../src/cli/output.js";
 
 const load = async (path: string) =>
   normalizeSpec(parseSpec(await readFile(path, "utf8")));
@@ -170,17 +171,21 @@ test("shared dependencies generate while unsupported operations remain deferred"
     await load("test/fixtures/phase2-deferred.yaml"),
   );
   assert.deepEqual(result.plan.sharedSchemas, ["Shared"]);
-  assert.equal(result.plan.stats.generatedOperations, 3);
-  assert.equal(result.plan.stats.deferredOperations, 3);
+  assert.equal(result.plan.stats.generatedOperations, 4);
+  assert.equal(result.plan.stats.deferredOperations, 2);
   assert.equal(result.plan.stats.generatedSchemas, 2);
   assert.equal(result.plan.stats.deferredSchemas, 0);
   assert.ok(
     !result.plan.deferredOperations.some((op) => op.operationId === "a"),
   );
-  assert.deepEqual(
-    result.plan.deferredOperations.find((op) => op.operationId === "fallback")
-      ?.reasons,
-    ["NO_SUCCESS_RESPONSE"],
+  assert.ok(
+    !result.plan.deferredOperations.some((op) => op.operationId === "fallback"),
+  );
+  assert.ok(
+    result.plan.diagnostics.some(
+      (d) =>
+        d.code === "DEFAULT_RESPONSE_FALLBACK" && d.location === "GET /default",
+    ),
   );
   assert.deepEqual(
     result.plan.deferredOperations.find((op) => op.operationId === "jsonBinary")
@@ -264,11 +269,93 @@ export const badNullableItems: Value = { nullableItems: null };
   t.after(compiled.cleanup);
 });
 
+test("default response fallback preserves precedence, ownership and Axios semantics", async (t) => {
+  const input = await readFile("test/fixtures/default-response.yaml", "utf8");
+  for (const version of ["3.0.3", "3.1.0"]) {
+    const doc = normalizeSpec({ ...parseSpec(input), openapi: version });
+    const result = await generate(doc);
+    assert.deepEqual(result, await generate(doc));
+    assert.equal(result.plan.stats.generatedOperations, 8);
+    assert.equal(result.plan.stats.deferredOperations, 1);
+    assert.equal(result.plan.stats.unusedSchemas, 1);
+    assert.deepEqual(result.plan.deferredOperations[0]?.reasons, [
+      "NO_SUCCESS_RESPONSE",
+    ]);
+    assert.deepEqual(result.plan.sharedSchemaNames, ["Child", "Value"]);
+    assert.deepEqual(result.plan.schemaUsage.Value, ["alpha", "beta"]);
+    assert.ok(
+      result.plan.stronglyConnectedComponents.some(
+        (scc) => scc.join() === "Child,Value",
+      ),
+    );
+    const warnings = result.plan.diagnostics.filter(
+      (d) => d.code === "DEFAULT_RESPONSE_FALLBACK",
+    );
+    assert.deepEqual(warnings.map((d) => d.location).sort(), [
+      "GET /array",
+      "GET /empty",
+      "GET /primitive",
+      "GET /ref",
+      "GET /shared",
+    ]);
+    assert.ok(warnings.every((d) => d.severity === "warning"));
+    const api = result.files.find((f) => f.path === "alpha/index.ts")!.content;
+    assert.match(api, /import type .*Value.*from "\.\.\/_shared\/type"/);
+    assert.doesNotMatch(api, /ErrorVO|reqMissing|\.data\b/);
+    const types = result.files.find((f) => f.path === "alpha/type.ts")!.content;
+    assert.match(types, /export type MultipleResponse = FooVO \| string/);
+    const compiled = await compile(
+      result,
+      `
+import { reqRef, reqPrimitive, reqArray, reqEmpty, reqExplicit, reqMultiple, reqRange } from './alpha/index';
+import { reqShared } from './beta/index';
+import type { Value, Child } from './_shared/type';
+import type { FooVO } from './alpha/type';
+import type { AxiosResponse } from 'axios';
+export const ref: Promise<AxiosResponse<Value>> = reqRef();
+export const primitive: Promise<AxiosResponse<string>> = reqPrimitive();
+export const array: Promise<AxiosResponse<Value[]>> = reqArray();
+export const empty: Promise<AxiosResponse<void>> = reqEmpty();
+export const explicit: Promise<AxiosResponse<FooVO>> = reqExplicit();
+export const multiple: Promise<AxiosResponse<FooVO | string>> = reqMultiple();
+export const range: Promise<AxiosResponse<FooVO>> = reqRange();
+export const shared: Promise<AxiosResponse<Child>> = reqShared();
+`,
+    );
+    t.after(compiled.cleanup);
+    await writeOutput(compiled.folder, result.files);
+    const repeat = await writeOutput(compiled.folder, result.files);
+    assert.ok(repeat.changes.every((change) => change.action === "unchanged"));
+    const runtime = await import(
+      pathToFileURL(join(compiled.folder, "alpha/index.ts")).href
+    );
+    const promise = Promise.resolve({ data: { child: {} } });
+    const get = t.mock.method(axios, "get", () => promise);
+    const signal = new AbortController().signal;
+    assert.equal(runtime.reqRef(signal), promise);
+    assert.deepEqual(get.mock.calls[0]?.arguments, ["/ref", { signal }]);
+    get.mock.restore();
+    const overridden = await generate(doc, {
+      overrides: {
+        operations: {
+          ref: { responseType: "boolean" },
+          missing: { responseType: "string" },
+        },
+      },
+    });
+    assert.match(
+      overridden.files.find((f) => f.path === "alpha/index.ts")!.content,
+      /axios.get<boolean>/,
+    );
+    assert.equal(overridden.plan.deferredOperations[0]?.operationId, "missing");
+  }
+});
+
 test("default response references participate in audit and ownership", async () => {
   const input = "test/fixtures/audit-default-response.json";
   const result = await generate(await load(input));
   assert.deepEqual(result.plan.sharedSchemas, ["Child", "Value"]);
-  assert.equal(result.plan.stats.generatedOperations, 1);
+  assert.equal(result.plan.stats.generatedOperations, 2);
   assert.deepEqual(result.plan.sharedSchemaNames, ["Child", "Value"]);
   const { stdout } = await promisify(execFile)(process.execPath, [
     "scripts/audit-spec.mjs",
@@ -473,7 +560,7 @@ test("explicit owners override inference and imports have stable paths and symbo
 test("owner-only module gets a type file even when its own operations are deferred", async (t) => {
   const doc = await load("test/fixtures/phase3.yaml");
   doc.operations.find((op) => op.module === "beta")!.responses[0]!.status =
-    "default";
+    "400";
   const result = await generate(doc, { schemaOwners: { Alpha: "beta" } });
   assert.ok(result.files.some((file) => file.path === "beta/type.ts"));
   assert.ok(!result.files.some((file) => file.path === "beta/index.ts"));
