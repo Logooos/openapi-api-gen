@@ -90,6 +90,120 @@ const compile = async (folder: string) => {
     throw new Error((e as { stdout: string }).stdout, { cause: e });
   }
 };
+test("excludeTags filters raw tags before mapping, ownership and manifest cleanup", async (t) => {
+  const dir = await temp(t);
+  const output = join(dir, "out");
+  const input = resolve("test/fixtures/exclude-tags.json");
+  const doc = normalizeSpec(parseSpec(await readFile(input, "utf8")));
+  const base = defineConfig({
+    overrides: { operations: { untagged: { module: "untagged" } } },
+    moduleNames: { internal: "hiddenModule" },
+  });
+  const before = await generate(doc, base);
+  assert.deepEqual(before, await generate(doc, { ...base, excludeTags: [] }));
+  await writeOutput(output, before.files);
+  const handwritten = join(output, "hiddenModule/handwritten.ts");
+  await writeFile(handwritten, "export const handwritten = true;\n");
+  const config = defineConfig({
+    ...base,
+    excludeTags: ["internal", "debug", "测试接口"],
+    includeOperations: doc.operations.map((op) => op.operationId!),
+    excludeOperations: ["legacy"],
+    // These overlapping rules must never run for an excluded operation.
+    modules: { internal: [{ name: "one" }, { name: "two" }] },
+  });
+  const result = await generate(doc, config);
+  assert.deepEqual(result, await generate(doc, config));
+  assert.deepEqual(result.plan.excludedOperations, [
+    "GET /chinese",
+    "GET /hidden",
+    "GET /legacy",
+    "GET /multi",
+    "POST /debug",
+  ]);
+  assert.equal(result.plan.stats.operations, 9);
+  assert.equal(result.plan.stats.generatedOperations, 4);
+  assert.deepEqual(result.plan.deferredOperations, []);
+  assert.deepEqual(
+    result.plan.diagnostics.map((d) => d.code),
+    ["MISSING_TAG"],
+  );
+  assert.deepEqual(result.plan.schemaUsage.CycleA, ["alpha", "beta"]);
+  assert.equal(result.plan.schemaOwners.CycleA, "_shared");
+  assert.equal(result.plan.schemaOwners.CycleB, "_shared");
+  assert.ok(
+    result.plan.stronglyConnectedComponents.some(
+      (scc) => scc.join() === "CycleA,CycleB",
+    ),
+  );
+  assert.equal(result.plan.schemaOwners.Solo, "alpha");
+  assert.deepEqual(result.plan.schemaUsage.Hidden, []);
+  assert.equal(result.plan.schemaOwners.Hidden, null);
+  assert.deepEqual(result.enums, before.enums);
+  assert.equal(result.enums.generated, 1);
+  assert.deepEqual(
+    result.plan.schemaDependencies,
+    before.plan.schemaDependencies,
+  );
+  assert.ok(result.files.some((f) => f.path === "case/index.ts"));
+  assert.ok(result.files.some((f) => f.path === "untagged/index.ts"));
+  assert.ok(result.files.some((f) => f.path === "_shared/type.ts"));
+  assert.ok(!result.files.some((f) => /Hidden|Standalone/.test(f.content)));
+  const mapped = await generate(doc, {
+    ...base,
+    excludeTags: ["hiddenModule"],
+  });
+  assert.ok(mapped.files.some((f) => f.path === "hiddenModule/index.ts"));
+  for (const invalid of ["internal", [1], [""], null]) {
+    assert.throws(
+      () => defineConfig({ excludeTags: invalid } as never),
+      /INVALID_CONFIG.*excludeTags/,
+    );
+    await assert.rejects(
+      generate(doc, { excludeTags: invalid } as never),
+      /INVALID_CONFIG.*excludeTags/,
+    );
+  }
+  await writeFile(
+    join(dir, "openapi-gen.config.ts"),
+    "export default " + JSON.stringify({ ...config, input, output }),
+  );
+  const planned = JSON.parse(await cli(dir, ["generate", "--plan"]));
+  assert.deepEqual(planned.plan, JSON.parse(JSON.stringify(result.plan)));
+  assert.deepEqual(planned.files, result.files);
+  const dry = JSON.parse(await cli(dir, ["generate", "--dry-run"]));
+  assert.ok(
+    dry.changes.some(
+      (c: { path: string; action: string }) =>
+        c.path === "hiddenModule/index.ts" && c.action === "delete",
+    ),
+  );
+  await access(join(output, "hiddenModule/index.ts"));
+  const actual = JSON.parse(await cli(dir, ["generate"]));
+  assert.deepEqual(actual.changes, dry.changes);
+  for (const file of [
+    "hiddenModule/index.ts",
+    "hiddenModule/type.ts",
+    "removed/index.ts",
+    "removed/type.ts",
+  ])
+    await assert.rejects(access(join(output, file)));
+  assert.equal(
+    await readFile(handwritten, "utf8"),
+    "export const handwritten = true;\n",
+  );
+  for (const file of result.files)
+    assert.equal(await readFile(join(output, file.path), "utf8"), file.content);
+  await compile(dir);
+  const repeat = JSON.parse(await cli(dir, ["generate"]));
+  assert.deepEqual(repeat.summary, {
+    create: 0,
+    modify: 0,
+    delete: 0,
+    unchanged: result.files.length + 1,
+  });
+});
+
 test("writer creates, overwrites targets, leaves unchanged mtimes and only removes managed stale files", async (t) => {
   const dir = await temp(t),
     output = join(dir, "out");

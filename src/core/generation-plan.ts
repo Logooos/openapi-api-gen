@@ -24,6 +24,7 @@ export const createGenerationPlan = (
   options: GenerationOptions = {},
 ): GenerationPlan => {
   validateConfig(options);
+  const operationCount = document.operations.length;
   const resolved = resolveDocument(document, options);
   document = resolved.document;
   options = {
@@ -306,11 +307,9 @@ export const createGenerationPlan = (
     deferredOperations,
     diagnostics,
     stats: {
-      operations: document.operations.length,
+      operations: operationCount,
       generatedOperations:
-        document.operations.length -
-        deferredOperations.length -
-        resolved.excluded.size,
+        operationCount - deferredOperations.length - resolved.excluded.size,
       deferredOperations: deferredOperations.length,
       modules: plannedModules.length,
       schemas: Object.keys(document.schemas).length,

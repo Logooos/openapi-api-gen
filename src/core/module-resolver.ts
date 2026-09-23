@@ -71,7 +71,12 @@ export const resolveDocument = (
     }
   const origins = new Map<string, string>();
   const excluded = new Set<string>();
-  const operations = document.operations.map((op) => {
+  const retainedOperations = document.operations.filter((op) => {
+    if (!op.tags.some((tag) => config.excludeTags?.includes(tag))) return true;
+    excluded.add(op.method.toUpperCase() + " " + op.path);
+    return false;
+  });
+  const operations = retainedOperations.map((op) => {
     const o = op.operationId
       ? config.overrides?.operations?.[op.operationId]
       : undefined;

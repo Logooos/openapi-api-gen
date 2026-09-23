@@ -140,6 +140,7 @@ export default defineConfig({
   barrel: { enabled: false },
   // includeOperations: ["getPage_1", "download"], // 省略表示全选；空数组表示全排除
   excludeOperations: [],
+  excludeTags: ["internal", "debug", "测试接口"], // 任意原始 tag 精确命中即排除
   overrides: {
     operations: {
       getPage_1: { name: "getCatalogPage", module: "catalog" },
@@ -162,6 +163,8 @@ CLI 覆盖项：`--output/-o`、`--config/-c`、重复 `--header key=value`、`-
 
 - 仅采用第一个 tag。归属优先级：operation override → 匹配的 path split → moduleNames → 原 tag。glob 支持 `*`（不跨 `/`）、`**`（跨目录）、`?`；exclude 优先；未命中 split 回到原 tag/rename；命中多个 split 报冲突。
 - operation include/exclude 和 override key 使用原始 operationId，exclude 优先。name 同步影响函数和 APIS；保留 `_1`、`_2` 后缀；原始重复 operationId 始终致命。
+- `excludeTags?: string[]` 默认 `[]`。区分大小写、精确匹配 operation 的所有原始 tags，任意一个命中即排除整个接口（包括非首位 tag）；无 tags 的接口不受影响。优先于 includeOperations、moduleNames、path split 和 operation module override，不能用 includeOperations 重新纳入。excludeOperations 的既有行为保持不变；配置文件同时用于 Core、CLI plan、dry-run 和实际生成。
+- 按 tag 排除的接口不计入 deferred，不产生该接口的 unsupported warning，也不参与 schema usage/ownership；仅由它引用的类型不再生成，仍被其他接口引用的 shared/SCC 类型继续保留或重新归属。独立 schema 和 runtime enum 的既有全局处理策略不变。变更过滤条件后建议先 dry-run，再全量 generate 并 review diff：manifest 管理的过期文件会清理，可能涉及整个模块和类型迁移，handwritten/非生成文件保留。
 - responseType 支持 `blob`、`void`、`string/number/boolean/integer`、本地命名 schema、数组后缀 `[]` 和 `|` 联合；不执行任意 TS 类型表达式。替换选中的显式 2xx 响应；没有 2xx 时替换 default fallback，不补造不存在的 response contract。
 - schemaOwners 和 overrides.schemas.owner 都覆盖自动推导；两处显式配置不一致会报错。全局图和 SCC 仍保证唯一 schema 定义及稳定 import type。
 - `types.int64` 支持 number/string/bigint；`types.nullable` 支持 union-null/ignore。`types.propertyOrder` 默认为 alphabetical（不依赖 locale），可设 source 保留规范声明顺序；只控制类型属性，不改变 import、APIS、函数或 enum 成员顺序。旧 Core `int64` 简写继续有效，types.int64 优先。

@@ -1,0 +1,220 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tag exclusion synthetic fixture",
+    "version": "1"
+  },
+  "paths": {
+    "/hidden": {
+      "get": {
+        "operationId": "hidden",
+        "tags": ["internal"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Hidden"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/multi": {
+      "get": {
+        "operationId": "multi",
+        "tags": ["removed", "internal"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleA"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chinese": {
+      "get": {
+        "operationId": "chinese",
+        "tags": ["测试接口"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Solo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alpha": {
+      "get": {
+        "operationId": "alpha",
+        "tags": ["alpha"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cycle": {
+                      "$ref": "#/components/schemas/CycleA"
+                    },
+                    "solo": {
+                      "$ref": "#/components/schemas/Solo"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/beta": {
+      "get": {
+        "operationId": "beta",
+        "tags": ["beta"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleB"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case": {
+      "get": {
+        "operationId": "caseSensitive",
+        "tags": ["case", "Internal"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/untagged": {
+      "get": {
+        "operationId": "untagged",
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy": {
+      "get": {
+        "operationId": "legacy",
+        "tags": ["public"],
+        "responses": {
+          "200": {
+            "description": "Synthetic response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debug": {
+      "post": {
+        "operationId": "debug",
+        "tags": ["debug"],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Synthetic response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Hidden": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "Solo": {
+        "type": "string"
+      },
+      "CycleA": {
+        "type": "object",
+        "properties": {
+          "b": {
+            "$ref": "#/components/schemas/CycleB"
+          }
+        }
+      },
+      "CycleB": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/CycleA"
+          }
+        }
+      },
+      "Standalone": {
+        "type": "string"
+      },
+      "GlobalState": {
+        "type": "string",
+        "x-enum-name": "GlobalState",
+        "enum": ["READY:就绪(Ready)"],
+        "description": "READY:就绪(Ready)"
+      }
+    }
+  }
+}

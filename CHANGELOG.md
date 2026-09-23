@@ -4,6 +4,7 @@ Versions 0.5.1 and later are public npm releases. Earlier versions record reposi
 
 ## Unreleased
 
+- Add optional excludeTags to exclude operations matching any raw tag exactly and case-sensitively before module mapping and schema ownership; preserve global enum handling and clean obsolete generated files through the existing manifest lifecycle.
 - Split npm publishing and GitHub Release into separate jobs, wait up to 15 registry checks at two-minute intervals for the exact version, and skip already published versions or existing GitHub Releases on reruns.
 - Planned for 0.5.4: use declared default responses when no explicit 2xx exists, emit DEFAULT_RESPONSE_FALLBACK without deferring, and retain explicit 2xx precedence and Axios semantics. Response overrides use the same selection; absent contracts remain deferred.
 - Public synthetic integration baseline: 6 operations, generated/deferred changes from 3/3 to 4/2; phase2-deferred also changes from 3/3 to 4/2, and audit-default-response from 1/1 to 2/0. No private fixtures or acceptance counts are used.

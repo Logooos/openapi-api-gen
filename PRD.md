@@ -23,6 +23,8 @@ README documents the public defineConfig interface. Preserve custom requestClien
 
 Default ownership uses the first tag. Operation override, path split and module rename can organize generated transport files; they do not promise to reproduce a legacy frontend architecture. Nested module paths and arbitrary multi-tag merging are post-v1 enhancements. Current module collision validation remains in force.
 
+Optional excludeTags: string[] defaults to no exclusions. Match every raw operation tag exactly and case-sensitively; any match excludes the whole operation before includeOperations, module mapping, operation diagnostics and schema usage/ownership analysis. Untagged operations are unaffected. Existing excludeOperations behavior and global schema/enum analysis remain unchanged. Explicit exclusion is not deferral. Full regeneration removes obsolete manifest-owned files only; shared dependencies still referenced by retained operations survive, and handwritten files are preserved.
+
 A dedicated output such as src/apis/generated is recommended for existing projects, not mandatory. Default output remains src/api. Multiple services can use independent configurations/outputs or adapters; one generation need not orchestrate multiple clients.
 
 CLI precedence is explicit CLI > config > environment > defaults. Config files are executable trusted TypeScript. Source credentials are not emitted into generated API files.

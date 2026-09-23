@@ -17,6 +17,7 @@ export type GeneratorConfig = {
   schemaOwners?: Record<string, string>;
   includeOperations?: string[];
   excludeOperations?: string[];
+  excludeTags?: string[];
   types?: {
     int64?: "number" | "string" | "bigint";
     nullable?: "union-null" | "ignore";
@@ -70,6 +71,7 @@ const shape: Rule = {
   schemaOwners: { "*": "text" },
   includeOperations: "list",
   excludeOperations: "list",
+  excludeTags: "list",
   types: { int64: "text", nullable: "text", propertyOrder: "text" },
   int64: "text",
   enum: { enabled: "boolean", output: "text" },
